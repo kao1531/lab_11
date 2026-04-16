@@ -472,8 +472,8 @@ begin
 
 
 	-- Add user logic here
--- set control reg to reset DDS
-control_reg <= not slv_reg2(0);
+    -- set control reg to reset DDS
+    control_reg <= not slv_reg2(0);
   
  -- filter chain for imaginary part
      fir_1 : fir_compiler_0
@@ -521,11 +521,14 @@ control_reg <= not slv_reg2(0);
         s_axis_data_tvalid => fir1_tvalid_i,
         s_axis_data_tready => fir2_tready_i,
         s_axis_data_tdata => fir2_in_i,
-        m_axis_data_tvalid => m_axis_tvalid,
+        m_axis_data_tvalid => fir2_tvalid_i,
         m_axis_data_tdata => fir2_out_i
       );
       
       filtered_data_i <= std_logic_vector(resize(shift_right(signed(fir2_out_i), 16), 16));
+      
+      -- check enable control bit
+      m_axis_tvalid <= fir2_tvalid_i and slv_reg2(1);
 
      -- DDS
      adc_dds : dds_compiler_0
@@ -565,7 +568,7 @@ control_reg <= not slv_reg2(0);
       );
       
       -- set outputs of IP
-      m_axis_tdata <= filtered_data_q & filtered_data_i; 
+      m_axis_tdata <= filtered_data_i & filtered_data_q; 
       
 -- implement counter
 process( S_AXI_ACLK ) is
